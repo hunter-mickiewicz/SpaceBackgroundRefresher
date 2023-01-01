@@ -1,0 +1,39 @@
+#enter your API code here, can be created at https://api.nasa.gov/
+$apiKey = "YOUR API KEY HERE"
+
+#creates the headers for the API call
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("X-API-KEY", $apiKey)
+
+#authenticates to the site
+$response = Invoke-RestMethod 'https://api.nasa.gov/planetary/apod' -Method 'GET' -Headers $headers
+
+#set the location of your download
+$bgLocation = "your\filepath\here"
+
+#download the photo
+$wc = New-Object System.Net.WebClient
+$wc.DownloadFile($response.url, $bgLocation)
+
+#sets the background
+#code taken from https://techexpert.tips/powershell/powershell-configure-wallpaper/
+$MyWallpaper=$bgLocation
+$code = @' 
+using System.Runtime.InteropServices; 
+namespace Win32{ 
+    
+     public class Wallpaper{ 
+        [DllImport("user32.dll", CharSet=CharSet.Auto)] 
+         static extern int SystemParametersInfo (int uAction , int uParam , string lpvParam , int fuWinIni) ; 
+         
+         public static void SetWallpaper(string thePath){ 
+            SystemParametersInfo(20,0,thePath,3); 
+         }
+    }
+ } 
+'@
+
+add-type $code 
+[Win32.Wallpaper]::SetWallpaper($MyWallpaper)
+
+exit
